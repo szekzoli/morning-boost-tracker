@@ -75,7 +75,7 @@ export default function PassesTab({ members, setMembers, sessions }: PassesTabPr
           member_name: member.name,
           passes_remaining: member.passesRemaining,
           sessions_list: sessionsList,
-          debt_line: member.debt > 0 ? `Fizetetlen alkalmak: ${member.debt}` : "",
+          debt_line: member.debt > 0 ? `<p style="margin: 4px 0; font-size: 15px; color: #ef4444;">⚠️ Fizetetlen alkalmak: <strong>${member.debt}</strong></p>` : "",
         },
         import.meta.env.VITE_EMAILJS_PUBLIC_KEY
       );
