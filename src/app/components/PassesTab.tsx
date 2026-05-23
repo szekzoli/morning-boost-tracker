@@ -1,8 +1,11 @@
 import { useState } from "react";
-import { Plus, X, Mail } from "lucide-react";
+import { Plus, X, Mail, Loader2 } from "lucide-react";
+import emailjs from "@emailjs/browser";
 import * as Progress from "@radix-ui/react-progress";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Member, Session } from "../App";
+
+const RECIPIENT_EMAIL = "szekely.zoltan92@gmail.com";
 
 interface PassesTabProps {
   members: Member[];
@@ -12,7 +15,7 @@ interface PassesTabProps {
 
 function formatEmailDate(dateStr: string): string {
   const date = new Date(dateStr);
-  const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const days = ["vasárnap", "hétfő", "kedd", "szerda", "csütörtök", "péntek", "szombat"];
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
@@ -22,6 +25,7 @@ function formatEmailDate(dateStr: string): string {
 export default function PassesTab({ members, setMembers, sessions }: PassesTabProps) {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newMemberName, setNewMemberName] = useState("");
+  const [sendingEmail, setSendingEmail] = useState<string | null>(null);
 
   // Sort members by passes remaining (lowest first)
   const sortedMembers = [...members].sort((a, b) => a.passesRemaining - b.passesRemaining);
@@ -45,11 +49,10 @@ export default function PassesTab({ members, setMembers, sessions }: PassesTabPr
     );
   };
 
-  const handleSendEmail = (memberId: string) => {
+  const handleSendEmail = async (memberId: string) => {
     const member = members.find(m => m.id === memberId);
     if (!member) return;
 
-    // Get all sessions this member attended
     const attendedSessions = sessions
       .filter(session => {
         const attendance = session.attendance.find(a => a.memberId === memberId);
@@ -58,15 +61,31 @@ export default function PassesTab({ members, setMembers, sessions }: PassesTabPr
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
       .map(session => formatEmailDate(session.date));
 
-    // Generate email content
-    const emailContent = `You have ${member.passesRemaining} remaining session${member.passesRemaining !== 1 ? "s" : ""} left from your pass.
+    const sessionsList = attendedSessions.length > 0
+      ? attendedSessions.join("\n")
+      : "Még nincs rögzített edzés.";
 
-Your sessions so far:
-${attendedSessions.join("\n")}`;
-
-    // For now, just log the email content (actual email sending not implemented)
-    console.log(`Email to ${member.name}:\n\n${emailContent}`);
-    alert(`Email preview for ${member.name}:\n\n${emailContent}`);
+    setSendingEmail(memberId);
+    try {
+      await emailjs.send(
+        import.meta.env.VITE_EMAILJS_SERVICE_ID,
+        import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+        {
+          to_email: RECIPIENT_EMAIL,
+          member_name: member.name,
+          passes_remaining: member.passesRemaining,
+          sessions_list: sessionsList,
+          debt_line: member.debt > 0 ? `Fizetetlen alkalmak: ${member.debt}` : "",
+        },
+        import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+      );
+      alert(`Email elküldve ${member.name} adataival!`);
+    } catch (err) {
+      console.error("Email küldési hiba:", err);
+      alert("Hiba történt az email küldésekor. Ellenőrizd az EmailJS beállításokat.");
+    } finally {
+      setSendingEmail(null);
+    }
   };
 
   const handleAddMember = () => {
@@ -90,7 +109,7 @@ ${attendedSessions.join("\n")}`;
   return (
     <div className="h-full overflow-auto pb-20">
       <div className="max-w-2xl mx-auto px-4 py-6">
-        <h2 className="mb-6">Member Passes</h2>
+        <h2 className="mb-6">Tagok Bérletei</h2>
 
         {/* Members List */}
         <div className="space-y-4 mb-6">
@@ -117,27 +136,31 @@ ${attendedSessions.join("\n")}`;
                           : "text-muted-foreground"
                       }`}
                     >
-                      {member.passesRemaining} / {member.totalPasses} passes remaining
+                      {member.passesRemaining} / {member.totalPasses} alkalom maradt
                     </div>
                     {member.debt > 0 && (
                       <div className="flex items-center gap-1 text-xs text-[#f59e0b] mt-1">
                         <span>⚠</span>
-                        <span>{member.debt} unpaid session{member.debt > 1 ? "s" : ""}</span>
+                        <span>{member.debt} fizetetlen alkalom</span>
                       </div>
                     )}
                   </div>
                   <div className="flex gap-2 ml-3">
                     <button
                       onClick={() => handleSendEmail(member.id)}
-                      className="px-3 py-1.5 border border-border rounded-lg hover:bg-accent transition-colors text-sm"
+                      disabled={sendingEmail === member.id}
+                      className="px-3 py-1.5 border border-border rounded-lg hover:bg-accent transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <Mail className="w-4 h-4" />
+                      {sendingEmail === member.id
+                        ? <Loader2 className="w-4 h-4 animate-spin" />
+                        : <Mail className="w-4 h-4" />
+                      }
                     </button>
                     <button
                       onClick={() => handleRenew(member.id)}
                       className="px-3 py-1.5 bg-[#14b8a6] text-white rounded-lg hover:bg-[#0d9488] transition-colors text-sm whitespace-nowrap"
                     >
-                      Renew
+                      Megújít
                     </button>
                   </div>
                 </div>
@@ -162,9 +185,9 @@ ${attendedSessions.join("\n")}`;
 
                 {/* Stats */}
                 <div className="flex gap-4 text-xs text-muted-foreground">
-                  <span>{member.sessionsUsed} sessions used</span>
+                  <span>{member.sessionsUsed} alkalom felhasználva</span>
                   <span>•</span>
-                  <span>{member.renewals} renewals</span>
+                  <span>{member.renewals} megújítás</span>
                 </div>
               </div>
             );
@@ -177,7 +200,7 @@ ${attendedSessions.join("\n")}`;
           className="w-full py-4 border-2 border-dashed border-muted-foreground/30 rounded-lg text-muted-foreground hover:border-[#14b8a6] hover:text-[#14b8a6] transition-colors flex items-center justify-center gap-2"
         >
           <Plus className="w-5 h-5" />
-          Add new member
+          Új tag hozzáadása
         </button>
 
         {/* Add Member Modal */}
@@ -186,14 +209,14 @@ ${attendedSessions.join("\n")}`;
             <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
             <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-card border border-border rounded-lg p-6 w-[90vw] max-w-md z-50 shadow-lg">
               <div className="flex items-start justify-between mb-4">
-                <Dialog.Title className="text-lg font-medium">Add New Member</Dialog.Title>
+                <Dialog.Title className="text-lg font-medium">Új Tag Hozzáadása</Dialog.Title>
                 <Dialog.Close className="p-1 hover:bg-accent rounded">
                   <X className="w-5 h-5" />
                 </Dialog.Close>
               </div>
 
               <Dialog.Description className="text-sm text-muted-foreground mb-4">
-                Enter the name of the new member. They will receive a fresh 10-session pass.
+                Add meg az új tag nevét. 10 alkalmas bérletet kap.
               </Dialog.Description>
 
               <input
@@ -201,7 +224,7 @@ ${attendedSessions.join("\n")}`;
                 value={newMemberName}
                 onChange={e => setNewMemberName(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && handleAddMember()}
-                placeholder="Member name"
+                placeholder="Tag neve"
                 className="w-full px-4 py-3 bg-input-background rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-[#14b8a6]/50 mb-4"
                 autoFocus
               />
@@ -214,14 +237,14 @@ ${attendedSessions.join("\n")}`;
                   }}
                   className="px-4 py-2 border border-border rounded-lg hover:bg-accent transition-colors"
                 >
-                  Cancel
+                  Mégse
                 </button>
                 <button
                   onClick={handleAddMember}
                   disabled={!newMemberName.trim()}
                   className="px-4 py-2 bg-[#14b8a6] text-white rounded-lg hover:bg-[#0d9488] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Add Member
+                  Hozzáadás
                 </button>
               </div>
             </Dialog.Content>

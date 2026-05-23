@@ -26,34 +26,16 @@ export interface Session {
   dropIns: string[];
 }
 
-// Initialize with some sample data
 const initialMembers: Member[] = [
-  { id: "1", name: "Sarah Chen", passesRemaining: 3, totalPasses: 10, renewals: 2, sessionsUsed: 7, debt: 0 },
-  { id: "2", name: "Mike Torres", passesRemaining: 8, totalPasses: 10, renewals: 1, sessionsUsed: 2, debt: 0 },
-  { id: "3", name: "Emma Wilson", passesRemaining: 0, totalPasses: 10, renewals: 3, sessionsUsed: 10, debt: 2 },
-  { id: "4", name: "James Park", passesRemaining: 5, totalPasses: 10, renewals: 0, sessionsUsed: 5, debt: 0 },
-  { id: "5", name: "Lisa Kumar", passesRemaining: 1, totalPasses: 10, renewals: 4, sessionsUsed: 9, debt: 0 },
+  { id: "1", name: "Zoli", passesRemaining: 6, totalPasses: 10, renewals: 0, sessionsUsed: 4, debt: 0 },
+  { id: "2", name: "Kornél", passesRemaining: 0, totalPasses: 10, renewals: 0, sessionsUsed: 10, debt: 2 },
+  { id: "3", name: "Szandra", passesRemaining: 1, totalPasses: 10, renewals: 0, sessionsUsed: 9, debt: 0 },
+  { id: "4", name: "Ercsi", passesRemaining: 1, totalPasses: 10, renewals: 0, sessionsUsed: 9, debt: 0 },
+  { id: "5", name: "Timi", passesRemaining: 3, totalPasses: 10, renewals: 0, sessionsUsed: 7, debt: 0 },
+  { id: "6", name: "Kuffart Gábor", passesRemaining: 7, totalPasses: 10, renewals: 0, sessionsUsed: 3, debt: 0 },
 ];
 
-const initialSessions: Session[] = [
-  {
-    date: "2026-05-19", // Monday
-    attendance: [
-      { memberId: "1", checked: true },
-      { memberId: "2", checked: true },
-      { memberId: "4", checked: false },
-    ],
-    dropIns: ["Alex Martinez"],
-  },
-  {
-    date: "2026-05-21", // Wednesday
-    attendance: [
-      { memberId: "1", checked: true },
-      { memberId: "5", checked: true },
-    ],
-    dropIns: [],
-  },
-];
+const initialSessions: Session[] = [];
 
 export default function App() {
   const [members, setMembers] = useState<Member[]>(initialMembers);
@@ -88,21 +70,21 @@ export default function App() {
             className="flex-1 flex flex-col items-center gap-1 py-3 px-4 data-[state=active]:text-[#14b8a6] data-[state=inactive]:text-muted-foreground transition-colors"
           >
             <Calendar className="w-5 h-5" />
-            <span className="text-xs">Session</span>
+            <span className="text-xs">Edzés</span>
           </Tabs.Trigger>
           <Tabs.Trigger
             value="passes"
             className="flex-1 flex flex-col items-center gap-1 py-3 px-4 data-[state=active]:text-[#14b8a6] data-[state=inactive]:text-muted-foreground transition-colors"
           >
             <Users className="w-5 h-5" />
-            <span className="text-xs">Passes</span>
+            <span className="text-xs">Bérletek</span>
           </Tabs.Trigger>
           <Tabs.Trigger
             value="reports"
             className="flex-1 flex flex-col items-center gap-1 py-3 px-4 data-[state=active]:text-[#14b8a6] data-[state=inactive]:text-muted-foreground transition-colors"
           >
             <BarChart3 className="w-5 h-5" />
-            <span className="text-xs">Reports</span>
+            <span className="text-xs">Statisztika</span>
           </Tabs.Trigger>
         </Tabs.List>
       </Tabs.Root>

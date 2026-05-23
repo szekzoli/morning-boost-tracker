@@ -42,9 +42,9 @@ function getPrevSessionDate(fromDate: Date): Date {
 
 function formatSessionDate(dateStr: string): string {
   const date = new Date(dateStr);
-  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  return `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}`;
+  const days = ["V", "H", "K", "Sze", "Cs", "P", "Szo"];
+  const months = ["jan.", "feb.", "már.", "ápr.", "máj.", "jún.", "júl.", "aug.", "szep.", "okt.", "nov.", "dec."];
+  return `${date.getFullYear()}. ${months[date.getMonth()]} ${date.getDate()}. (${days[date.getDay()]})`;
 }
 
 function getInitials(name: string): string {
@@ -223,21 +223,21 @@ export default function SessionTab({ members, setMembers, sessions, setSessions 
         <div className="flex gap-3 mb-6 overflow-x-auto">
           <div className="flex-1 min-w-[100px] bg-card border border-border rounded-lg px-4 py-3 text-center">
             <div className="text-2xl text-[#14b8a6]">{stats.total}</div>
-            <div className="text-xs text-muted-foreground mt-1">Total</div>
+            <div className="text-xs text-muted-foreground mt-1">Összesen</div>
           </div>
           <div className="flex-1 min-w-[100px] bg-card border border-border rounded-lg px-4 py-3 text-center">
             <div className="text-2xl text-[#14b8a6]">{stats.passHolders}</div>
-            <div className="text-xs text-muted-foreground mt-1">Pass Holders</div>
+            <div className="text-xs text-muted-foreground mt-1">Bérletesek</div>
           </div>
           <div className="flex-1 min-w-[100px] bg-card border border-border rounded-lg px-4 py-3 text-center">
             <div className="text-2xl text-[#14b8a6]">{stats.dropIns}</div>
-            <div className="text-xs text-muted-foreground mt-1">Drop-ins</div>
+            <div className="text-xs text-muted-foreground mt-1">Vendégek</div>
           </div>
         </div>
 
         {/* Members List */}
         <div className="space-y-3 mb-6">
-          <h3 className="text-sm text-muted-foreground px-1">Regular Members</h3>
+          <h3 className="text-sm text-muted-foreground px-1">Tagok</h3>
           {members.map(member => {
             const attendanceRecord = currentSession.attendance.find(a => a.memberId === member.id);
             const isChecked = attendanceRecord?.checked || false;
@@ -264,12 +264,12 @@ export default function SessionTab({ members, setMembers, sessions, setSessions 
                         : "text-muted-foreground"
                     }`}
                   >
-                    {member.passesRemaining} passes remaining
+                    {member.passesRemaining} alkalom maradt
                   </div>
                   {member.debt > 0 && (
                     <div className="flex items-center gap-1 text-xs text-[#f59e0b] mt-1">
                       <span>⚠</span>
-                      <span>{member.debt} unpaid session{member.debt > 1 ? "s" : ""}</span>
+                      <span>{member.debt} fizetetlen alkalom</span>
                     </div>
                   )}
                 </div>
@@ -292,7 +292,7 @@ export default function SessionTab({ members, setMembers, sessions, setSessions 
 
         {/* Drop-ins Section */}
         <div className="space-y-3 mb-6">
-          <h3 className="text-sm text-muted-foreground px-1">Drop-in Guests</h3>
+          <h3 className="text-sm text-muted-foreground px-1">Vendégek</h3>
           {currentSession.dropIns.length > 0 ? (
             <div className="space-y-2">
               {currentSession.dropIns.map((name, idx) => (
@@ -305,14 +305,14 @@ export default function SessionTab({ members, setMembers, sessions, setSessions 
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="font-medium truncate">{name}</div>
-                    <div className="text-sm text-muted-foreground">Drop-in</div>
+                    <div className="text-sm text-muted-foreground">Vendég</div>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
             <div className="text-center text-muted-foreground text-sm py-4">
-              No drop-in guests yet
+              Még nincs vendég
             </div>
           )}
         </div>
@@ -324,7 +324,7 @@ export default function SessionTab({ members, setMembers, sessions, setSessions 
             value={dropInInput}
             onChange={e => setDropInInput(e.target.value)}
             onKeyDown={e => e.key === "Enter" && handleAddDropIn()}
-            placeholder="Add drop-in guest name"
+            placeholder="Vendég neve"
             className="flex-1 px-4 py-3 bg-input-background rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-[#14b8a6]/50"
           />
           <button
