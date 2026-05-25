@@ -65,11 +65,11 @@ export default function PassesTab({ members, setMembers, sessions }: PassesTabPr
     if (attendedSessions.length > 0) {
       const groups: string[] = [];
       for (let i = 0; i < attendedSessions.length; i += 10) {
-        const chunk = attendedSessions.slice(i, i + 10);
+        const chunk = attendedSessions.slice(i, i + 10).reverse();
         const passNum = Math.floor(i / 10) + 1;
         groups.push(`${passNum}. bérlet:\n${chunk.join("\n")}`);
       }
-      sessionsList = groups.join("\n\n");
+      sessionsList = groups.reverse().join("\n\n");
     }
 
     setSendingEmail(memberId);
