@@ -27,15 +27,76 @@ export interface Session {
 }
 
 const initialMembers: Member[] = [
-  { id: "1", name: "Zoli", passesRemaining: 6, totalPasses: 10, renewals: 0, sessionsUsed: 4, debt: 0 },
+  { id: "1", name: "Zoli", passesRemaining: 6, totalPasses: 10, renewals: 5, sessionsUsed: 4, debt: 0 },
   { id: "2", name: "Kornél", passesRemaining: 0, totalPasses: 10, renewals: 0, sessionsUsed: 10, debt: 2 },
-  { id: "3", name: "Szandra", passesRemaining: 1, totalPasses: 10, renewals: 0, sessionsUsed: 9, debt: 0 },
+  { id: "3", name: "Szandra", passesRemaining: 1, totalPasses: 10, renewals: 3, sessionsUsed: 9, debt: 0 },
   { id: "4", name: "Ercsi", passesRemaining: 1, totalPasses: 10, renewals: 0, sessionsUsed: 9, debt: 0 },
   { id: "5", name: "Timi", passesRemaining: 3, totalPasses: 10, renewals: 0, sessionsUsed: 7, debt: 0 },
   { id: "6", name: "Kuffart Gábor", passesRemaining: 7, totalPasses: 10, renewals: 0, sessionsUsed: 3, debt: 0 },
 ];
 
-const initialSessions: Session[] = [];
+const Z = "1";
+const S = "3";
+const att = (...ids: string[]) => ids.map(id => ({ memberId: id, checked: true }));
+
+const initialSessions: Session[] = [
+  { date: "2026-01-10", attendance: att(Z), dropIns: [] },
+  { date: "2026-01-12", attendance: att(Z), dropIns: [] },
+  { date: "2026-01-14", attendance: att(Z), dropIns: [] },
+  { date: "2026-01-17", attendance: att(Z), dropIns: [] },
+  { date: "2026-01-19", attendance: att(Z), dropIns: [] },
+  { date: "2026-01-21", attendance: att(Z), dropIns: [] },
+  { date: "2026-01-24", attendance: att(Z), dropIns: [] },
+  { date: "2026-01-26", attendance: att(Z), dropIns: [] },
+  { date: "2026-01-28", attendance: att(Z), dropIns: [] },
+  { date: "2026-01-31", attendance: att(Z), dropIns: [] },
+  { date: "2026-02-02", attendance: att(Z), dropIns: [] },
+  { date: "2026-02-04", attendance: att(Z), dropIns: [] },
+  { date: "2026-02-07", attendance: att(Z), dropIns: [] },
+  { date: "2026-02-09", attendance: att(Z), dropIns: [] },
+  { date: "2026-02-11", attendance: att(Z), dropIns: [] },
+  { date: "2026-02-14", attendance: att(Z), dropIns: [] },
+  { date: "2026-02-18", attendance: att(Z), dropIns: [] },
+  { date: "2026-02-21", attendance: att(Z), dropIns: [] },
+  { date: "2026-02-23", attendance: att(Z), dropIns: [] },
+  { date: "2026-02-25", attendance: att(Z, S), dropIns: [] },
+  { date: "2026-02-28", attendance: att(Z, S), dropIns: [] },
+  { date: "2026-03-02", attendance: att(Z, S), dropIns: [] },
+  { date: "2026-03-04", attendance: att(Z, S), dropIns: [] },
+  { date: "2026-03-07", attendance: att(Z, S), dropIns: [] },
+  { date: "2026-03-09", attendance: att(Z, S), dropIns: [] },
+  { date: "2026-03-11", attendance: att(Z, S), dropIns: [] },
+  { date: "2026-03-14", attendance: att(Z, S), dropIns: [] },
+  { date: "2026-03-16", attendance: att(Z, S), dropIns: [] },
+  { date: "2026-03-23", attendance: att(Z), dropIns: [] },
+  { date: "2026-03-25", attendance: att(Z, S), dropIns: [] },
+  { date: "2026-03-28", attendance: att(Z, S), dropIns: [] },
+  { date: "2026-03-30", attendance: att(Z), dropIns: [] },
+  { date: "2026-04-01", attendance: att(Z, S), dropIns: [] },
+  { date: "2026-04-04", attendance: att(Z), dropIns: [] },
+  { date: "2026-04-06", attendance: att(Z), dropIns: [] },
+  { date: "2026-04-08", attendance: att(Z, S), dropIns: [] },
+  { date: "2026-04-11", attendance: att(Z, S), dropIns: [] },
+  { date: "2026-04-13", attendance: att(Z, S), dropIns: [] },
+  { date: "2026-04-15", attendance: att(Z, S), dropIns: [] },
+  { date: "2026-04-18", attendance: att(Z, S), dropIns: [] },
+  { date: "2026-04-20", attendance: att(Z), dropIns: [] },
+  { date: "2026-04-22", attendance: att(Z, S), dropIns: [] },
+  { date: "2026-04-25", attendance: att(Z, S), dropIns: [] },
+  { date: "2026-04-27", attendance: att(Z, S), dropIns: [] },
+  { date: "2026-04-29", attendance: att(Z, S), dropIns: [] },
+  { date: "2026-05-02", attendance: att(Z, S), dropIns: [] },
+  { date: "2026-05-04", attendance: att(Z, S), dropIns: [] },
+  { date: "2026-05-06", attendance: att(Z, S), dropIns: [] },
+  { date: "2026-05-09", attendance: att(Z, S), dropIns: [] },
+  { date: "2026-05-11", attendance: att(Z, S), dropIns: [] },
+  { date: "2026-05-13", attendance: att(Z, S), dropIns: [] },
+  { date: "2026-05-16", attendance: att(Z, S), dropIns: [] },
+  { date: "2026-05-18", attendance: att(Z), dropIns: [] },
+  { date: "2026-05-20", attendance: att(Z, S), dropIns: [] },
+  { date: "2026-05-23", attendance: att(Z, S), dropIns: [] },
+  { date: "2026-05-25", attendance: att(Z, S), dropIns: [] },
+];
 
 export default function App() {
   const [members, setMembers] = useState<Member[]>(initialMembers);
