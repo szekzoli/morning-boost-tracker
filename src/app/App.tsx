@@ -27,9 +27,9 @@ export interface Session {
 }
 
 const initialMembers: Member[] = [
-  { id: "1", name: "Zoli", passesRemaining: 6, totalPasses: 10, renewals: 5, sessionsUsed: 4, debt: 0 },
+  { id: "1", name: "Zoli", passesRemaining: 4, totalPasses: 10, renewals: 5, sessionsUsed: 6, debt: 0 },
   { id: "2", name: "Kornél", passesRemaining: 0, totalPasses: 10, renewals: 0, sessionsUsed: 10, debt: 2 },
-  { id: "3", name: "Szandra", passesRemaining: 1, totalPasses: 10, renewals: 3, sessionsUsed: 9, debt: 0 },
+  { id: "3", name: "Szandra", passesRemaining: 0, totalPasses: 10, renewals: 2, sessionsUsed: 10, debt: 1 },
   { id: "4", name: "Ercsi", passesRemaining: 1, totalPasses: 10, renewals: 0, sessionsUsed: 9, debt: 0 },
   { id: "5", name: "Timi", passesRemaining: 3, totalPasses: 10, renewals: 0, sessionsUsed: 7, debt: 0 },
   { id: "6", name: "Kuffart Gábor", passesRemaining: 7, totalPasses: 10, renewals: 0, sessionsUsed: 3, debt: 0 },
