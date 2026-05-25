@@ -61,9 +61,16 @@ export default function PassesTab({ members, setMembers, sessions }: PassesTabPr
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
       .map(session => formatEmailDate(session.date));
 
-    const sessionsList = attendedSessions.length > 0
-      ? attendedSessions.join("\n")
-      : "Még nincs rögzített edzés.";
+    let sessionsList = "Még nincs rögzített edzés.";
+    if (attendedSessions.length > 0) {
+      const groups: string[] = [];
+      for (let i = 0; i < attendedSessions.length; i += 10) {
+        const chunk = attendedSessions.slice(i, i + 10);
+        const passNum = Math.floor(i / 10) + 1;
+        groups.push(`${passNum}. bérlet:\n${chunk.join("\n")}`);
+      }
+      sessionsList = groups.join("\n\n");
+    }
 
     setSendingEmail(memberId);
     try {
