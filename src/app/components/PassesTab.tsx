@@ -78,11 +78,11 @@ export default function PassesTab({ members, setMembers, sessions }: PassesTabPr
         import.meta.env.VITE_EMAILJS_SERVICE_ID,
         import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
         {
-          to_email: RECIPIENT_EMAIL,
+          to_email: member.email || RECIPIENT_EMAIL,
           member_name: member.name,
           passes_remaining: member.passesRemaining,
           sessions_list: sessionsList,
-          debt_line: member.debt > 0 ? `<p style="margin: 4px 0; font-size: 15px; color: #ef4444;">⚠️ Fizetetlen alkalmak: <strong>${member.debt}</strong></p>` : "",
+          debt_line: member.debt > 0 ? `<p style="margin: 4px 0; font-size: 15px; color: #ef4444;">⚠️ Rendezetlen alkalmak: <strong>${member.debt}</strong></p>` : "",
         },
         import.meta.env.VITE_EMAILJS_PUBLIC_KEY
       );

@@ -8,6 +8,7 @@ import ReportsTab from "./components/ReportsTab";
 export interface Member {
   id: string;
   name: string;
+  email: string;
   passesRemaining: number;
   totalPasses: number;
   renewals: number;
@@ -27,12 +28,12 @@ export interface Session {
 }
 
 const initialMembers: Member[] = [
-  { id: "1", name: "Zoli", passesRemaining: 4, totalPasses: 10, renewals: 5, sessionsUsed: 6, debt: 0 },
-  { id: "2", name: "Kornél", passesRemaining: 0, totalPasses: 10, renewals: 0, sessionsUsed: 10, debt: 2 },
-  { id: "3", name: "Szandra", passesRemaining: 0, totalPasses: 10, renewals: 2, sessionsUsed: 10, debt: 1 },
-  { id: "4", name: "Ercsi", passesRemaining: 1, totalPasses: 10, renewals: 0, sessionsUsed: 9, debt: 0 },
-  { id: "5", name: "Timi", passesRemaining: 3, totalPasses: 10, renewals: 0, sessionsUsed: 7, debt: 0 },
-  { id: "6", name: "Kuffart Gábor", passesRemaining: 7, totalPasses: 10, renewals: 0, sessionsUsed: 3, debt: 0 },
+  { id: "1", name: "Zoli", email: "bagdi.zoltan1@hotmail.com", passesRemaining: 4, totalPasses: 10, renewals: 5, sessionsUsed: 6, debt: 0 },
+  { id: "2", name: "Kornél", email: "", passesRemaining: 0, totalPasses: 10, renewals: 0, sessionsUsed: 10, debt: 2 },
+  { id: "3", name: "Szandra", email: "fintoralexandra@gmail.com", passesRemaining: 0, totalPasses: 10, renewals: 2, sessionsUsed: 10, debt: 1 },
+  { id: "4", name: "Ercsi", email: "", passesRemaining: 1, totalPasses: 10, renewals: 0, sessionsUsed: 9, debt: 0 },
+  { id: "5", name: "Timi", email: "", passesRemaining: 3, totalPasses: 10, renewals: 0, sessionsUsed: 7, debt: 0 },
+  { id: "6", name: "Kuffart Gábor", email: "", passesRemaining: 7, totalPasses: 10, renewals: 0, sessionsUsed: 3, debt: 0 },
 ];
 
 const Z = "1";
