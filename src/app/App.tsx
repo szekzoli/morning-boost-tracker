@@ -1,9 +1,10 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { Calendar, Users, BarChart3 } from "lucide-react";
 import * as Tabs from "@radix-ui/react-tabs";
 import SessionTab from "./components/SessionTab";
 import PassesTab from "./components/PassesTab";
 import ReportsTab from "./components/ReportsTab";
+import { supabase } from "../lib/supabase";
 
 export interface Member {
   id: string;
@@ -99,10 +100,84 @@ const initialSessions: Session[] = [
   { date: "2026-05-25", attendance: att(Z, S), dropIns: [] },
 ];
 
+function memberToRow(m: Member) {
+  return {
+    id: m.id,
+    name: m.name,
+    email: m.email,
+    passes_remaining: m.passesRemaining,
+    total_passes: m.totalPasses,
+    renewals: m.renewals,
+    sessions_used: m.sessionsUsed,
+    debt: m.debt,
+  };
+}
+
+function rowToMember(r: Record<string, unknown>): Member {
+  return {
+    id: r.id as string,
+    name: r.name as string,
+    email: (r.email as string) ?? "",
+    passesRemaining: r.passes_remaining as number,
+    totalPasses: r.total_passes as number,
+    renewals: r.renewals as number,
+    sessionsUsed: r.sessions_used as number,
+    debt: r.debt as number,
+  };
+}
+
+function sessionToRow(s: Session) {
+  return { date: s.date, attendance: s.attendance, drop_ins: s.dropIns };
+}
+
+function rowToSession(r: Record<string, unknown>): Session {
+  return {
+    date: r.date as string,
+    attendance: r.attendance as SessionAttendance[],
+    dropIns: r.drop_ins as string[],
+  };
+}
+
 export default function App() {
   const [members, setMembers] = useState<Member[]>(initialMembers);
   const [sessions, setSessions] = useState<Session[]>(initialSessions);
   const [activeTab, setActiveTab] = useState("session");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function init() {
+      const { data: membersData } = await supabase.from("members").select("*");
+
+      if (!membersData || membersData.length === 0) {
+        await supabase.from("members").insert(initialMembers.map(memberToRow));
+        await supabase.from("sessions").insert(initialSessions.map(sessionToRow));
+      } else {
+        setMembers(membersData.map(rowToMember));
+        const { data: sessionsData } = await supabase.from("sessions").select("*");
+        if (sessionsData) setSessions(sessionsData.map(rowToSession));
+      }
+      setLoading(false);
+    }
+    init();
+  }, []);
+
+  const updateMembers = (newMembers: Member[]) => {
+    setMembers(newMembers);
+    supabase.from("members").upsert(newMembers.map(memberToRow));
+  };
+
+  const updateSessions = (newSessions: Session[]) => {
+    setSessions(newSessions);
+    supabase.from("sessions").upsert(newSessions.map(sessionToRow));
+  };
+
+  if (loading) {
+    return (
+      <div className="size-full flex items-center justify-center bg-background">
+        <div className="text-muted-foreground text-sm">Betöltés...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="size-full bg-background overflow-hidden flex flex-col">
@@ -112,13 +187,13 @@ export default function App() {
           <Tabs.Content value="session" className="h-full">
             <SessionTab
               members={members}
-              setMembers={setMembers}
+              setMembers={updateMembers}
               sessions={sessions}
-              setSessions={setSessions}
+              setSessions={updateSessions}
             />
           </Tabs.Content>
           <Tabs.Content value="passes" className="h-full">
-            <PassesTab members={members} setMembers={setMembers} sessions={sessions} />
+            <PassesTab members={members} setMembers={updateMembers} sessions={sessions} />
           </Tabs.Content>
           <Tabs.Content value="reports" className="h-full">
             <ReportsTab members={members} sessions={sessions} />
