@@ -163,12 +163,16 @@ export default function App() {
 
   const updateMembers = (newMembers: Member[]) => {
     setMembers(newMembers);
-    supabase.from("members").upsert(newMembers.map(memberToRow));
+    supabase.from("members")
+      .upsert(newMembers.map(memberToRow), { onConflict: "id" })
+      .then(({ error }) => { if (error) console.error("Members mentési hiba:", error); });
   };
 
   const updateSessions = (newSessions: Session[]) => {
     setSessions(newSessions);
-    supabase.from("sessions").upsert(newSessions.map(sessionToRow));
+    supabase.from("sessions")
+      .upsert(newSessions.map(sessionToRow), { onConflict: "date" })
+      .then(({ error }) => { if (error) console.error("Sessions mentési hiba:", error); });
   };
 
   if (loading) {
