@@ -73,6 +73,7 @@ export default function SessionTab({ members, setMembers, sessions, setSessions 
 
   const [currentSessionDate, setCurrentSessionDate] = useState(initialSessionDate);
   const [dropInInput, setDropInInput] = useState("");
+  const [totalInputValue, setTotalInputValue] = useState<string | null>(null);
 
   // Get or create current session
   const currentSession = useMemo(() => {
@@ -241,8 +242,18 @@ export default function SessionTab({ members, setMembers, sessions, setSessions 
             <input
               type="number"
               min={0}
-              value={stats.total}
-              onChange={e => handleTotalChange(e.target.value)}
+              value={totalInputValue !== null ? totalInputValue : stats.total}
+              onFocus={() => setTotalInputValue("")}
+              onChange={e => setTotalInputValue(e.target.value)}
+              onBlur={() => {
+                if (totalInputValue !== null) {
+                  if (totalInputValue.trim() !== "") {
+                    handleTotalChange(totalInputValue);
+                  }
+                  setTotalInputValue(null);
+                }
+              }}
+              onKeyDown={e => e.key === "Enter" && e.currentTarget.blur()}
               className="w-full text-2xl text-[#14b8a6] text-center bg-transparent focus:outline-none"
             />
             <div className="text-xs text-muted-foreground mt-1">Összesen</div>
