@@ -29,17 +29,17 @@ export interface Session {
 }
 
 const initialMembers: Member[] = [
-  { id: "1", name: "Zoli", email: "bagdi.zoltan1@hotmail.com", passesRemaining: 4, totalPasses: 10, renewals: 5, sessionsUsed: 6, debt: 0 },
-  { id: "2", name: "Kornél", email: "", passesRemaining: 0, totalPasses: 10, renewals: 0, sessionsUsed: 10, debt: 2 },
-  { id: "3", name: "Szandra", email: "fintoralexandra@gmail.com", passesRemaining: 0, totalPasses: 10, renewals: 2, sessionsUsed: 10, debt: 1 },
-  { id: "4", name: "Ercsi", email: "", passesRemaining: 1, totalPasses: 10, renewals: 0, sessionsUsed: 9, debt: 0 },
-  { id: "5", name: "Timi", email: "", passesRemaining: 3, totalPasses: 10, renewals: 0, sessionsUsed: 7, debt: 0 },
-  { id: "6", name: "Kuffart Gábor", email: "", passesRemaining: 7, totalPasses: 10, renewals: 0, sessionsUsed: 3, debt: 0 },
-  { id: "7", name: "K. Timi", email: "", passesRemaining: 10, totalPasses: 10, renewals: 0, sessionsUsed: 0, debt: 0 },
-  { id: "8", name: "Ági", email: "", passesRemaining: 10, totalPasses: 10, renewals: 0, sessionsUsed: 0, debt: 0 },
-  { id: "9", name: "Ávi", email: "", passesRemaining: 10, totalPasses: 10, renewals: 0, sessionsUsed: 0, debt: 0 },
-  { id: "10", name: "Zsófi", email: "", passesRemaining: 10, totalPasses: 10, renewals: 0, sessionsUsed: 0, debt: 0 },
-  { id: "11", name: "Réka", email: "", passesRemaining: 10, totalPasses: 10, renewals: 0, sessionsUsed: 0, debt: 0 },
+  { id: "1", name: "Zoli", email: "bagdi.zoltan1@hotmail.com", passesRemaining: 9, totalPasses: 10, renewals: 5, sessionsUsed: 6, debt: 0 },
+  { id: "2", name: "Kornél", email: "", passesRemaining: 0, totalPasses: 10, renewals: 0, sessionsUsed: 10, debt: 3 },
+  { id: "3", name: "Szandra", email: "fintoralexandra@gmail.com", passesRemaining: 7, totalPasses: 10, renewals: 2, sessionsUsed: 10, debt: 1 },
+  { id: "4", name: "Ercsi", email: "", passesRemaining: 4, totalPasses: 10, renewals: 0, sessionsUsed: 9, debt: 0 },
+  { id: "5", name: "Timi", email: "", passesRemaining: 7, totalPasses: 10, renewals: 0, sessionsUsed: 7, debt: 0 },
+  { id: "6", name: "Kuffart Gábor", email: "", passesRemaining: 5, totalPasses: 10, renewals: 0, sessionsUsed: 3, debt: 0 },
+  { id: "7", name: "K. Timi", email: "", passesRemaining: 8, totalPasses: 10, renewals: 0, sessionsUsed: 0, debt: 0 },
+  { id: "8", name: "Ági", email: "", passesRemaining: 0, totalPasses: 10, renewals: 0, sessionsUsed: 0, debt: 0 },
+  { id: "9", name: "Évi", email: "", passesRemaining: 9, totalPasses: 10, renewals: 0, sessionsUsed: 0, debt: 0 },
+  { id: "10", name: "Zsófi", email: "", passesRemaining: 6, totalPasses: 10, renewals: 0, sessionsUsed: 0, debt: 0 },
+  { id: "11", name: "Réka", email: "", passesRemaining: 8, totalPasses: 10, renewals: 0, sessionsUsed: 0, debt: 0 },
 ];
 
 const Z = "1"; // Zoli
