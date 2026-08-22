@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, X, Mail, Loader2 } from "lucide-react";
+import { Plus, X, Mail, Loader2, History } from "lucide-react";
 import emailjs from "@emailjs/browser";
 import * as Progress from "@radix-ui/react-progress";
 import * as Dialog from "@radix-ui/react-dialog";
@@ -26,6 +26,21 @@ export default function PassesTab({ members, setMembers, sessions }: PassesTabPr
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newMemberName, setNewMemberName] = useState("");
   const [sendingEmail, setSendingEmail] = useState<string | null>(null);
+  const [historyMemberId, setHistoryMemberId] = useState<string | null>(null);
+
+  const getCurrentPassDates = (memberId: string, count: number): string[] => {
+    return sessions
+      .filter(session => session.attendance.find(a => a.memberId === memberId && a.checked))
+      .map(session => session.date)
+      .sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
+      .slice(-count)
+      .reverse();
+  };
+
+  const historyMember = members.find(m => m.id === historyMemberId) || null;
+  const historyDates = historyMember
+    ? getCurrentPassDates(historyMember.id, historyMember.totalPasses - historyMember.passesRemaining)
+    : [];
 
   const handleRenew = (memberId: string) => {
     setMembers(
@@ -161,6 +176,12 @@ export default function PassesTab({ members, setMembers, sessions }: PassesTabPr
                       }
                     </button>
                     <button
+                      onClick={() => setHistoryMemberId(member.id)}
+                      className="px-3 py-1.5 border border-border rounded-lg hover:bg-accent transition-colors text-sm"
+                    >
+                      <History className="w-4 h-4" />
+                    </button>
+                    <button
                       onClick={() => handleRenew(member.id)}
                       className="px-3 py-1.5 bg-[#14b8a6] text-white rounded-lg hover:bg-[#0d9488] transition-colors text-sm whitespace-nowrap"
                     >
@@ -251,6 +272,40 @@ export default function PassesTab({ members, setMembers, sessions }: PassesTabPr
                   Hozzáadás
                 </button>
               </div>
+            </Dialog.Content>
+          </Dialog.Portal>
+        </Dialog.Root>
+
+        {/* Current Pass History Modal */}
+        <Dialog.Root open={!!historyMemberId} onOpenChange={open => !open && setHistoryMemberId(null)}>
+          <Dialog.Portal>
+            <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
+            <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-card border border-border rounded-lg p-6 w-[90vw] max-w-md z-50 shadow-lg max-h-[80vh] overflow-auto">
+              <div className="flex items-start justify-between mb-4">
+                <Dialog.Title className="text-lg font-medium">
+                  {historyMember?.name} – jelenlegi bérlet alkalmai
+                </Dialog.Title>
+                <Dialog.Close className="p-1 hover:bg-accent rounded">
+                  <X className="w-5 h-5" />
+                </Dialog.Close>
+              </div>
+
+              {historyDates.length > 0 ? (
+                <ul className="space-y-2">
+                  {historyDates.map(date => (
+                    <li
+                      key={date}
+                      className="px-3 py-2 bg-muted rounded-lg text-sm"
+                    >
+                      {formatEmailDate(date)}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Még nincs rögzített alkalom ebben a bérletben.
+                </p>
+              )}
             </Dialog.Content>
           </Dialog.Portal>
         </Dialog.Root>
