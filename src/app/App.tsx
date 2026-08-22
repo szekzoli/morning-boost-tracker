@@ -29,18 +29,28 @@ export interface Session {
 }
 
 const initialMembers: Member[] = [
-  { id: "1", name: "Zoli", email: "bagdi.zoltan1@hotmail.com", passesRemaining: 9, totalPasses: 10, renewals: 5, sessionsUsed: 6, debt: 0 },
+  { id: "1", name: "Zoli", email: "bagdi.zoltan1@hotmail.com", passesRemaining: 9, totalPasses: 10, renewals: 5, sessionsUsed: 1, debt: 0 },
+  { id: "5", name: "Timi", email: "", passesRemaining: 7, totalPasses: 10, renewals: 0, sessionsUsed: 3, debt: 0 },
+  { id: "4", name: "Ercsi", email: "", passesRemaining: 4, totalPasses: 10, renewals: 0, sessionsUsed: 6, debt: 0 },
   { id: "2", name: "Kornél", email: "", passesRemaining: 0, totalPasses: 10, renewals: 0, sessionsUsed: 10, debt: 1 },
-  { id: "3", name: "Szandra", email: "fintoralexandra@gmail.com", passesRemaining: 7, totalPasses: 10, renewals: 2, sessionsUsed: 10, debt: 0 },
-  { id: "4", name: "Ercsi", email: "", passesRemaining: 4, totalPasses: 10, renewals: 0, sessionsUsed: 9, debt: 0 },
-  { id: "5", name: "Timi", email: "", passesRemaining: 7, totalPasses: 10, renewals: 0, sessionsUsed: 7, debt: 0 },
-  { id: "6", name: "Kuffart Gábor", email: "", passesRemaining: 5, totalPasses: 10, renewals: 0, sessionsUsed: 3, debt: 0 },
-  { id: "7", name: "K. Timi", email: "", passesRemaining: 8, totalPasses: 10, renewals: 0, sessionsUsed: 0, debt: 0 },
-  { id: "8", name: "Ági", email: "", passesRemaining: 0, totalPasses: 10, renewals: 0, sessionsUsed: 0, debt: 0 },
-  { id: "9", name: "Évi", email: "", passesRemaining: 9, totalPasses: 10, renewals: 0, sessionsUsed: 0, debt: 0 },
-  { id: "10", name: "Zsófi", email: "", passesRemaining: 6, totalPasses: 10, renewals: 0, sessionsUsed: 0, debt: 0 },
-  { id: "11", name: "Réka", email: "", passesRemaining: 8, totalPasses: 10, renewals: 0, sessionsUsed: 0, debt: 0 },
+  { id: "3", name: "Szandra", email: "fintoralexandra@gmail.com", passesRemaining: 7, totalPasses: 10, renewals: 2, sessionsUsed: 3, debt: 0 },
+  { id: "6", name: "Kuffart Gábor", email: "", passesRemaining: 5, totalPasses: 10, renewals: 0, sessionsUsed: 5, debt: 0 },
+  { id: "7", name: "K. Timi", email: "", passesRemaining: 8, totalPasses: 10, renewals: 0, sessionsUsed: 2, debt: 0 },
+  { id: "8", name: "Ági", email: "", passesRemaining: 0, totalPasses: 10, renewals: 0, sessionsUsed: 10, debt: 0 },
+  { id: "9", name: "Évi", email: "", passesRemaining: 9, totalPasses: 10, renewals: 0, sessionsUsed: 1, debt: 0 },
+  { id: "10", name: "Zsófi", email: "", passesRemaining: 6, totalPasses: 10, renewals: 0, sessionsUsed: 4, debt: 0 },
+  { id: "11", name: "Réka", email: "", passesRemaining: 8, totalPasses: 10, renewals: 0, sessionsUsed: 2, debt: 0 },
 ];
+
+const MEMBER_ORDER = ["1", "5", "4", "2", "3", "6", "7", "8", "9", "10", "11"];
+
+function sortByMemberOrder(list: Member[]): Member[] {
+  return [...list].sort((a, b) => {
+    const ai = MEMBER_ORDER.indexOf(a.id);
+    const bi = MEMBER_ORDER.indexOf(b.id);
+    return (ai === -1 ? Infinity : ai) - (bi === -1 ? Infinity : bi);
+  });
+}
 
 const Z = "1"; // Zoli
 const K = "2"; // Kornél
@@ -217,7 +227,7 @@ export default function App() {
         await supabase.from("members").insert(initialMembers.map(memberToRow));
         await supabase.from("sessions").insert(initialSessions.map(sessionToRow));
       } else {
-        setMembers(membersData.map(rowToMember));
+        setMembers(sortByMemberOrder(membersData.map(rowToMember)));
         const { data: sessionsData } = await supabase.from("sessions").select("*");
         if (sessionsData) setSessions(sessionsData.map(rowToSession));
       }
@@ -227,9 +237,10 @@ export default function App() {
   }, []);
 
   const updateMembers = (newMembers: Member[]) => {
-    setMembers(newMembers);
+    const sorted = sortByMemberOrder(newMembers);
+    setMembers(sorted);
     supabase.from("members")
-      .upsert(newMembers.map(memberToRow), { onConflict: "id" })
+      .upsert(sorted.map(memberToRow), { onConflict: "id" })
       .then(({ error }) => { if (error) console.error("Members mentési hiba:", error); });
   };
 

@@ -27,9 +27,6 @@ export default function PassesTab({ members, setMembers, sessions }: PassesTabPr
   const [newMemberName, setNewMemberName] = useState("");
   const [sendingEmail, setSendingEmail] = useState<string | null>(null);
 
-  // Sort members by passes remaining (lowest first)
-  const sortedMembers = [...members].sort((a, b) => a.passesRemaining - b.passesRemaining);
-
   const handleRenew = (memberId: string) => {
     setMembers(
       members.map(m => {
@@ -120,8 +117,8 @@ export default function PassesTab({ members, setMembers, sessions }: PassesTabPr
 
         {/* Members List */}
         <div className="space-y-4 mb-6">
-          {sortedMembers.map(member => {
-            const progressPercent = (member.sessionsUsed / member.totalPasses) * 100;
+          {members.map(member => {
+            const progressPercent = ((member.totalPasses - member.passesRemaining) / member.totalPasses) * 100;
             const isLow = member.passesRemaining <= 2;
             const isEmpty = member.passesRemaining === 0;
 
