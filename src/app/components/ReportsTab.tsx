@@ -1,4 +1,5 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Member, Session } from "../App";
 
 interface ReportsTabProps {
@@ -13,82 +14,112 @@ function formatSessionDate(dateStr: string): string {
   return `${months[date.getMonth()]} ${date.getDate()}. (${days[date.getDay()]})`;
 }
 
+function getSessionTotal(session: Session): number {
+  const passHolders = session.attendance.filter(a => a.checked).length;
+  return session.totalOverride ?? passHolders + session.dropIns.length;
+}
+
 export default function ReportsTab({ members, sessions }: ReportsTabProps) {
-  // Calculate current month sessions
-  const currentMonthSessions = useMemo(() => {
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
+  const [viewDate, setViewDate] = useState(() => new Date());
+
+  const handlePrevMonth = () => {
+    setViewDate(d => new Date(d.getFullYear(), d.getMonth() - 1, 1));
+  };
+
+  const handleNextMonth = () => {
+    setViewDate(d => new Date(d.getFullYear(), d.getMonth() + 1, 1));
+  };
+
+  const monthSessions = useMemo(() => {
+    const month = viewDate.getMonth();
+    const year = viewDate.getFullYear();
 
     return sessions
       .filter(s => {
         const sessionDate = new Date(s.date);
-        return sessionDate.getMonth() === currentMonth && sessionDate.getFullYear() === currentYear;
+        return sessionDate.getMonth() === month && sessionDate.getFullYear() === year;
       })
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [sessions]);
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [sessions, viewDate]);
 
-  // Calculate stats
   const stats = useMemo(() => {
-    const currentMonthTotal = currentMonthSessions.reduce((sum, s) => {
-      const passHolders = s.attendance.filter(a => a.checked).length;
-      const dropIns = s.dropIns.length;
-      return sum + passHolders + dropIns;
-    }, 0);
+    let total = 0;
+    let passHolders = 0;
+    let maxAttendance = 1;
 
-    const allTimeTotal = sessions.reduce((sum, s) => {
-      const passHolders = s.attendance.filter(a => a.checked).length;
-      const dropIns = s.dropIns.length;
-      return sum + passHolders + dropIns;
-    }, 0);
-
-    const maxAttendance = Math.max(
-      ...currentMonthSessions.map(s => {
-        const passHolders = s.attendance.filter(a => a.checked).length;
-        const dropIns = s.dropIns.length;
-        return passHolders + dropIns;
-      }),
-      1
-    );
+    for (const s of monthSessions) {
+      const sessionTotal = getSessionTotal(s);
+      const sessionPassHolders = s.attendance.filter(a => a.checked).length;
+      total += sessionTotal;
+      passHolders += sessionPassHolders;
+      maxAttendance = Math.max(maxAttendance, sessionTotal);
+    }
 
     return {
-      currentMonthTotal,
-      allTimeTotal,
+      total,
+      passHolders,
+      guests: Math.max(0, total - passHolders),
+      sessionCount: monthSessions.length,
       maxAttendance,
     };
-  }, [sessions, currentMonthSessions]);
+  }, [monthSessions]);
 
-  const currentMonthName = new Date().toLocaleString("hu-HU", { month: "long" });
+  const monthName = viewDate.toLocaleString("hu-HU", { year: "numeric", month: "long" });
 
   return (
     <div className="h-full overflow-auto pb-20">
       <div className="max-w-2xl mx-auto px-4 py-6">
         <h2 className="mb-6">Statisztika</h2>
 
-        {/* Stat Cards */}
+        {/* Month Navigator */}
+        <div className="flex items-center justify-between mb-6">
+          <button
+            onClick={handlePrevMonth}
+            className="p-2 hover:bg-accent rounded-lg transition-colors"
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+          <h3 className="text-center capitalize">{monthName}</h3>
+          <button
+            onClick={handleNextMonth}
+            className="p-2 hover:bg-accent rounded-lg transition-colors"
+          >
+            <ChevronRight className="w-6 h-6" />
+          </button>
+        </div>
+
+        {/* Stat Tiles */}
         <div className="grid grid-cols-2 gap-4 mb-8">
           <div className="bg-card border border-border rounded-lg p-6 text-center">
-            <div className="text-4xl text-[#14b8a6] mb-2">{stats.currentMonthTotal}</div>
-            <div className="text-sm text-muted-foreground">{currentMonthName} résztvevők</div>
+            <div className="text-4xl text-[#14b8a6] mb-2">{stats.total}</div>
+            <div className="text-sm text-muted-foreground">Összesen</div>
           </div>
           <div className="bg-card border border-border rounded-lg p-6 text-center">
-            <div className="text-4xl text-[#14b8a6] mb-2">{stats.allTimeTotal}</div>
-            <div className="text-sm text-muted-foreground">Összes résztvevő</div>
+            <div className="text-4xl text-[#14b8a6] mb-2">{stats.passHolders}</div>
+            <div className="text-sm text-muted-foreground">Bérletesek</div>
+          </div>
+          <div className="bg-card border border-border rounded-lg p-6 text-center">
+            <div className="text-4xl text-[#14b8a6] mb-2">{stats.guests}</div>
+            <div className="text-sm text-muted-foreground">Vendégek</div>
+          </div>
+          <div className="bg-card border border-border rounded-lg p-6 text-center">
+            <div className="text-4xl text-[#14b8a6] mb-2">{stats.sessionCount}</div>
+            <div className="text-sm text-muted-foreground">Edzések</div>
           </div>
         </div>
 
         {/* Monthly Session List */}
         <div>
-          <h3 className="text-sm text-muted-foreground px-1 mb-3">
-            {currentMonthName} edzések
+          <h3 className="text-sm text-muted-foreground px-1 mb-3 capitalize">
+            {monthName} edzései
           </h3>
 
-          {currentMonthSessions.length > 0 ? (
+          {monthSessions.length > 0 ? (
             <div className="space-y-3">
-              {currentMonthSessions.map(session => {
+              {monthSessions.map(session => {
                 const passHolders = session.attendance.filter(a => a.checked).length;
-                const dropIns = session.dropIns.length;
-                const total = passHolders + dropIns;
+                const total = getSessionTotal(session);
+                const guests = Math.max(0, total - passHolders);
                 const barWidth = (total / stats.maxAttendance) * 100;
 
                 return (
@@ -113,15 +144,15 @@ export default function ReportsTab({ members, sessions }: ReportsTabProps) {
                     <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
                       <span>{passHolders} bérletes</span>
                       <span>•</span>
-                      <span>{dropIns} vendég</span>
+                      <span>{guests} vendég</span>
                     </div>
                   </div>
                 );
               })}
             </div>
           ) : (
-            <div className="text-center text-muted-foreground text-sm py-8">
-              Nincs rögzített edzés {currentMonthName} hónapban
+            <div className="text-center text-muted-foreground text-sm py-8 capitalize">
+              Nincs rögzített edzés {monthName} hónapban
             </div>
           )}
         </div>
