@@ -26,6 +26,7 @@ export interface Session {
   date: string; // ISO date string
   attendance: SessionAttendance[];
   dropIns: string[];
+  totalOverride?: number;
 }
 
 const initialMembers: Member[] = [
@@ -202,14 +203,28 @@ function rowToMember(r: Record<string, unknown>): Member {
 }
 
 function sessionToRow(s: Session) {
-  return { date: s.date, attendance: s.attendance, drop_ins: s.dropIns };
+  return {
+    date: s.date,
+    attendance: s.attendance,
+    drop_ins: { names: s.dropIns, totalOverride: s.totalOverride ?? null },
+  };
 }
 
 function rowToSession(r: Record<string, unknown>): Session {
+  const rawDropIns = r.drop_ins;
+  const isLegacyArray = Array.isArray(rawDropIns);
+  const names = isLegacyArray
+    ? (rawDropIns as string[])
+    : ((rawDropIns as { names?: string[] } | null)?.names ?? []);
+  const totalOverride = isLegacyArray
+    ? undefined
+    : ((rawDropIns as { totalOverride?: number } | null)?.totalOverride ?? undefined);
+
   return {
     date: r.date as string,
     attendance: r.attendance as SessionAttendance[],
-    dropIns: r.drop_ins as string[],
+    dropIns: names,
+    totalOverride,
   };
 }
 

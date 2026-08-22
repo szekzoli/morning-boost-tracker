@@ -86,13 +86,29 @@ export default function SessionTab({ members, setMembers, sessions, setSessions 
   // Calculate summary stats
   const stats = useMemo(() => {
     const passHolders = currentSession.attendance.filter(a => a.checked).length;
-    const dropIns = currentSession.dropIns.length;
+    const total = currentSession.totalOverride ?? passHolders + currentSession.dropIns.length;
     return {
-      total: passHolders + dropIns,
+      total,
       passHolders,
-      dropIns,
+      dropIns: Math.max(0, total - passHolders),
     };
   }, [currentSession]);
+
+  const handleTotalChange = (value: string) => {
+    const total = Math.max(0, parseInt(value, 10) || 0);
+    const updatedSessions = sessions.map(s =>
+      s.date === currentSessionDate ? { ...s, totalOverride: total } : s
+    );
+    if (!sessions.find(s => s.date === currentSessionDate)) {
+      updatedSessions.push({
+        date: currentSessionDate,
+        attendance: [],
+        dropIns: [],
+        totalOverride: total,
+      });
+    }
+    setSessions(updatedSessions);
+  };
 
   const handlePrevSession = () => {
     const prev = getPrevSessionDate(new Date(currentSessionDate));
@@ -222,7 +238,13 @@ export default function SessionTab({ members, setMembers, sessions, setSessions 
         {/* Summary Chips */}
         <div className="flex gap-3 mb-6 overflow-x-auto">
           <div className="flex-1 min-w-[100px] bg-card border border-border rounded-lg px-4 py-3 text-center">
-            <div className="text-2xl text-[#14b8a6]">{stats.total}</div>
+            <input
+              type="number"
+              min={0}
+              value={stats.total}
+              onChange={e => handleTotalChange(e.target.value)}
+              className="w-full text-2xl text-[#14b8a6] text-center bg-transparent focus:outline-none"
+            />
             <div className="text-xs text-muted-foreground mt-1">Összesen</div>
           </div>
           <div className="flex-1 min-w-[100px] bg-card border border-border rounded-lg px-4 py-3 text-center">
