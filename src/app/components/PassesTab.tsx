@@ -37,10 +37,15 @@ export default function PassesTab({ members, setMembers, sessions }: PassesTabPr
       .reverse();
   };
 
+  const getTotalAttendedCount = (memberId: string): number => {
+    return sessions.filter(session => session.attendance.find(a => a.memberId === memberId && a.checked)).length;
+  };
+
   const historyMember = members.find(m => m.id === historyMemberId) || null;
   const historyDates = historyMember
     ? getCurrentPassDates(historyMember.id, historyMember.totalPasses - historyMember.passesRemaining)
     : [];
+  const historyTotalCount = historyMember ? getTotalAttendedCount(historyMember.id) : 0;
 
   const handleRenew = (memberId: string) => {
     setMembers(
@@ -288,6 +293,11 @@ export default function PassesTab({ members, setMembers, sessions }: PassesTabPr
                 <Dialog.Close className="p-1 hover:bg-accent rounded">
                   <X className="w-5 h-5" />
                 </Dialog.Close>
+              </div>
+
+              <div className="flex items-center justify-between bg-muted rounded-lg px-4 py-3 mb-4">
+                <span className="text-sm text-muted-foreground">Összes edzés</span>
+                <span className="text-lg font-medium text-[#14b8a6]">{historyTotalCount}</span>
               </div>
 
               {historyDates.length > 0 ? (

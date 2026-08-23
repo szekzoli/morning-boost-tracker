@@ -10,6 +10,17 @@ interface SessionTabProps {
   setSessions: (sessions: Session[]) => void;
 }
 
+const FREQUENT_GUESTS = [
+  "Balázs",
+  "Rita",
+  "Marci",
+  "Klaudia",
+  "Timi lánya",
+  "Barbara",
+  "Dorka",
+  "Szabó Dorcsi",
+];
+
 // Get next Mon/Wed/Sat from a date
 function getNextSessionDate(fromDate: Date): Date {
   const day = fromDate.getDay();
@@ -205,28 +216,17 @@ export default function SessionTab({ members, setMembers, sessions, setSessions 
 
   const handleAddDropIn = () => {
     if (!dropInInput.trim()) return;
-
-    const updatedSessions = sessions.map(s => {
-      if (s.date === currentSessionDate) {
-        return {
-          ...s,
-          dropIns: [...s.dropIns, dropInInput.trim()],
-        };
-      }
-      return s;
-    });
-
-    // If session doesn't exist yet, create it
-    if (!sessions.find(s => s.date === currentSessionDate)) {
-      updatedSessions.push({
-        date: currentSessionDate,
-        attendance: [],
-        dropIns: [dropInInput.trim()],
-      });
-    }
-
-    setSessions(updatedSessions);
+    updateCurrentSession({ dropIns: [...currentSession.dropIns, dropInInput.trim()] });
     setDropInInput("");
+  };
+
+  const handleToggleFrequentGuest = (name: string) => {
+    const isPresent = currentSession.dropIns.includes(name);
+    updateCurrentSession({
+      dropIns: isPresent
+        ? currentSession.dropIns.filter(n => n !== name)
+        : [...currentSession.dropIns, name],
+    });
   };
 
   return (
@@ -363,6 +363,26 @@ export default function SessionTab({ members, setMembers, sessions, setSessions 
               Még nincs vendég
             </div>
           )}
+        </div>
+
+        {/* Frequent Guest Chips */}
+        <div className="flex flex-wrap gap-2 mb-3">
+          {FREQUENT_GUESTS.map(name => {
+            const isActive = currentSession.dropIns.includes(name);
+            return (
+              <button
+                key={name}
+                onClick={() => handleToggleFrequentGuest(name)}
+                className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
+                  isActive
+                    ? "bg-[#14b8a6] border-[#14b8a6] text-white"
+                    : "border-border hover:border-[#14b8a6] hover:bg-[#14b8a6]/10"
+                }`}
+              >
+                {name}
+              </button>
+            );
+          })}
         </div>
 
         {/* Add Drop-in Input */}
