@@ -27,6 +27,8 @@ export interface Session {
   attendance: SessionAttendance[];
   dropIns: string[];
   totalOverride?: number;
+  notes?: string;
+  cancelled?: boolean;
 }
 
 const initialMembers: Member[] = [
@@ -206,25 +208,28 @@ function sessionToRow(s: Session) {
   return {
     date: s.date,
     attendance: s.attendance,
-    drop_ins: { names: s.dropIns, totalOverride: s.totalOverride ?? null },
+    drop_ins: {
+      names: s.dropIns,
+      totalOverride: s.totalOverride ?? null,
+      notes: s.notes ?? null,
+      cancelled: s.cancelled ?? false,
+    },
   };
 }
 
 function rowToSession(r: Record<string, unknown>): Session {
   const rawDropIns = r.drop_ins;
   const isLegacyArray = Array.isArray(rawDropIns);
-  const names = isLegacyArray
-    ? (rawDropIns as string[])
-    : ((rawDropIns as { names?: string[] } | null)?.names ?? []);
-  const totalOverride = isLegacyArray
-    ? undefined
-    : ((rawDropIns as { totalOverride?: number } | null)?.totalOverride ?? undefined);
+  type DropInsBlob = { names?: string[]; totalOverride?: number; notes?: string; cancelled?: boolean };
+  const blob = isLegacyArray ? null : (rawDropIns as DropInsBlob | null);
 
   return {
     date: r.date as string,
     attendance: r.attendance as SessionAttendance[],
-    dropIns: names,
-    totalOverride,
+    dropIns: isLegacyArray ? (rawDropIns as string[]) : (blob?.names ?? []),
+    totalOverride: isLegacyArray ? undefined : (blob?.totalOverride ?? undefined),
+    notes: isLegacyArray ? undefined : (blob?.notes ?? undefined),
+    cancelled: isLegacyArray ? undefined : (blob?.cancelled ?? undefined),
   };
 }
 

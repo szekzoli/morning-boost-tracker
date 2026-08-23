@@ -37,7 +37,7 @@ export default function ReportsTab({ members, sessions }: ReportsTabProps) {
     return sessions
       .filter(s => {
         const sessionDate = new Date(s.date);
-        return sessionDate.getMonth() === month && sessionDate.getFullYear() === year;
+        return sessionDate.getMonth() === month && sessionDate.getFullYear() === year && !s.cancelled;
       })
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [sessions, viewDate]);

@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { ChevronLeft, ChevronRight, Check, Plus } from "lucide-react";
 import { Member, Session, SessionAttendance } from "../App";
+import { Switch } from "./ui/switch";
 
 interface SessionTabProps {
   members: Member[];
@@ -95,20 +96,32 @@ export default function SessionTab({ members, setMembers, sessions, setSessions 
     };
   }, [currentSession]);
 
-  const handleTotalChange = (value: string) => {
-    const total = Math.max(0, parseInt(value, 10) || 0);
+  const updateCurrentSession = (patch: Partial<Session>) => {
     const updatedSessions = sessions.map(s =>
-      s.date === currentSessionDate ? { ...s, totalOverride: total } : s
+      s.date === currentSessionDate ? { ...s, ...patch } : s
     );
     if (!sessions.find(s => s.date === currentSessionDate)) {
       updatedSessions.push({
         date: currentSessionDate,
         attendance: [],
         dropIns: [],
-        totalOverride: total,
+        ...patch,
       });
     }
     setSessions(updatedSessions);
+  };
+
+  const handleTotalChange = (value: string) => {
+    const total = Math.max(0, parseInt(value, 10) || 0);
+    updateCurrentSession({ totalOverride: total });
+  };
+
+  const handleNotesChange = (value: string) => {
+    updateCurrentSession({ notes: value });
+  };
+
+  const handleCancelledChange = (cancelled: boolean) => {
+    updateCurrentSession({ cancelled });
   };
 
   const handlePrevSession = () => {
@@ -227,7 +240,9 @@ export default function SessionTab({ members, setMembers, sessions, setSessions 
           >
             <ChevronLeft className="w-6 h-6" />
           </button>
-          <h2 className="text-center">{formatSessionDate(currentSessionDate)}</h2>
+          <h2 className={`text-center ${currentSession.cancelled ? "line-through text-muted-foreground" : ""}`}>
+            {formatSessionDate(currentSessionDate)}
+          </h2>
           <button
             onClick={handleNextSession}
             className="p-2 hover:bg-accent rounded-lg transition-colors"
@@ -367,6 +382,30 @@ export default function SessionTab({ members, setMembers, sessions, setSessions 
           >
             <Plus className="w-5 h-5" />
           </button>
+        </div>
+
+        {/* Cancelled Toggle */}
+        <div className="flex items-center justify-between bg-card border border-border rounded-lg p-4 mt-6">
+          <div>
+            <div className="font-medium">Elmaradt</div>
+            <div className="text-sm text-muted-foreground">Az edzés nem lett megtartva</div>
+          </div>
+          <Switch
+            checked={currentSession.cancelled || false}
+            onCheckedChange={handleCancelledChange}
+          />
+        </div>
+
+        {/* Notes */}
+        <div className="mt-4">
+          <h3 className="text-sm text-muted-foreground px-1 mb-2">Megjegyzés</h3>
+          <textarea
+            value={currentSession.notes || ""}
+            onChange={e => handleNotesChange(e.target.value)}
+            placeholder="Szabad szöveges megjegyzés ehhez az edzéshez..."
+            rows={3}
+            className="w-full px-4 py-3 bg-input-background rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-[#14b8a6]/50 resize-none"
+          />
         </div>
       </div>
     </div>
