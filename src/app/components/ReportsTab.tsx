@@ -6,6 +6,7 @@ import { fromYmd } from "../../lib/dates";
 interface ReportsTabProps {
   members: Member[];
   sessions: Session[];
+  onLogout: () => void;
 }
 
 function formatSessionDate(dateStr: string): string {
@@ -20,7 +21,7 @@ function getSessionTotal(session: Session): number {
   return session.totalOverride ?? passHolders + session.dropIns.length;
 }
 
-export default function ReportsTab({ members, sessions }: ReportsTabProps) {
+export default function ReportsTab({ members, sessions, onLogout }: ReportsTabProps) {
   const [viewDate, setViewDate] = useState(() => new Date());
 
   const handlePrevMonth = () => {
@@ -157,6 +158,13 @@ export default function ReportsTab({ members, sessions }: ReportsTabProps) {
             </div>
           )}
         </div>
+
+        <button
+          onClick={onLogout}
+          className="mt-10 w-full py-3 border border-border rounded-lg text-sm text-muted-foreground hover:bg-accent transition-colors"
+        >
+          Kijelentkezés
+        </button>
       </div>
     </div>
   );

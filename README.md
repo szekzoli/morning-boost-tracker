@@ -1,11 +1,33 @@
+# Morning Boost Tracker
 
-  # Morning Boost Tracker App
+A Morning Boost csoportos edzések jelenléti naplója és bérletnyilvántartása (telefonra optimalizálva).
 
-  This is a code bundle for Morning Boost Tracker App. The original project is available at https://www.figma.com/design/I6BIAkneN9mY6MxzTpm8ZC/Morning-Boost-Tracker-App.
+## Futtatás a gépen
 
-  ## Running the code
+```
+npm install
+npm run dev
+```
 
-  Run `npm i` to install the dependencies.
+A futtatáshoz egy `.env.local` fájl kell a projekt gyökerében (ez nem kerül a git-be):
 
-  Run `npm run dev` to start the development server.
-  
+```
+VITE_SUPABASE_URL=...
+VITE_SUPABASE_ANON_KEY=...
+VITE_EMAILJS_SERVICE_ID=...
+VITE_EMAILJS_TEMPLATE_ID=...
+VITE_EMAILJS_PUBLIC_KEY=...
+```
+
+## Élesítés
+
+A `main` ágra feltöltött változtatásokat a GitHub Actions automatikusan kiteszi a GitHub Pages-re
+(`.github/workflows/deploy.yml`). A kulcsok a repó *Settings → Secrets and variables → Actions* részében vannak.
+
+## Belépés és adatvédelem
+
+Az alkalmazás belépéssel működik (Supabase Auth, e-mail + jelszó). Az adatbázist a
+`supabase/biztonsag.sql` védi: a táblákat csak a tulajdonos fiókja olvashatja és írhatja.
+A fájl elején leírt sorrendet tartsd be.
+
+A forráskódba **ne kerüljön** vendégnév, e-mail-cím vagy más személyes adat: minden adat az adatbázisban van.

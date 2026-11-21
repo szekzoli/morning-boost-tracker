@@ -4,6 +4,8 @@ import * as Tabs from "@radix-ui/react-tabs";
 import SessionTab from "./components/SessionTab";
 import PassesTab from "./components/PassesTab";
 import ReportsTab from "./components/ReportsTab";
+import Login from "./components/Login";
+import type { Session as AuthSession } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
 
 export interface Member {
@@ -95,18 +97,49 @@ export default function App() {
   const [members, setMembers] = useState<Member[]>([]);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [activeTab, setActiveTab] = useState("session");
+  // undefined: még nem tudjuk, be van-e lépve; null: nincs belépve
+  const [auth, setAuth] = useState<AuthSession | null | undefined>(undefined);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
-    async function init() {
-      const { data: membersData } = await supabase.from("members").select("*");
-      if (membersData) setMembers(sortMembers(membersData.map(rowToMember)));
-      const { data: sessionsData } = await supabase.from("sessions").select("*");
-      if (sessionsData) setSessions(sessionsData.map(rowToSession));
+    supabase.auth.getSession().then(({ data }) => setAuth(data.session));
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => setAuth(session));
+    return () => data.subscription.unsubscribe();
+  }, []);
+
+  const userId = auth?.user.id;
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+    async function load() {
+      setLoading(true);
+      setLoadError(false);
+      const [m, s] = await Promise.all([
+        supabase.from("members").select("*"),
+        supabase.from("sessions").select("*"),
+      ]);
+      if (cancelled) return;
+      if (m.error || s.error) {
+        console.error("Betöltési hiba:", m.error ?? s.error);
+        setLoadError(true);
+      } else {
+        setMembers(sortMembers((m.data ?? []).map(rowToMember)));
+        setSessions((s.data ?? []).map(rowToSession));
+      }
       setLoading(false);
     }
-    init();
-  }, []);
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
+  const logout = () => {
+    supabase.auth.signOut();
+    setMembers([]);
+    setSessions([]);
+  };
 
   const updateMembers = (newMembers: Member[]) => {
     const sorted = sortMembers(newMembers);
@@ -123,10 +156,28 @@ export default function App() {
       .then(({ error }) => { if (error) console.error("Sessions mentési hiba:", error); });
   };
 
-  if (loading) {
+  if (auth === null) return <Login />;
+
+  if (auth === undefined || loading) {
     return (
       <div className="size-full flex items-center justify-center bg-background">
         <div className="text-muted-foreground text-sm">Betöltés...</div>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="size-full flex flex-col items-center justify-center gap-4 bg-background px-6 text-center">
+        <p className="text-sm text-muted-foreground">Nem sikerült betölteni az adatokat. Ellenőrizd az internetkapcsolatot.</p>
+        <div className="flex gap-2">
+          <button onClick={() => location.reload()} className="px-4 py-2 bg-[#14b8a6] text-white rounded-lg">
+            Újrapróbálom
+          </button>
+          <button onClick={logout} className="px-4 py-2 border border-border rounded-lg">
+            Kijelentkezés
+          </button>
+        </div>
       </div>
     );
   }
@@ -148,7 +199,7 @@ export default function App() {
             <PassesTab members={members} setMembers={updateMembers} sessions={sessions} />
           </Tabs.Content>
           <Tabs.Content value="reports" className="h-full">
-            <ReportsTab members={members} sessions={sessions} />
+            <ReportsTab members={members} sessions={sessions} onLogout={logout} />
           </Tabs.Content>
         </div>
 
