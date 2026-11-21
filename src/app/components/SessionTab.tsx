@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { ChevronLeft, ChevronRight, Check, Plus } from "lucide-react";
 import { Member, Session, SessionAttendance } from "../App";
 import { Switch } from "./ui/switch";
+import { SESSION_DAYS, fromYmd, nextSessionDay, prevSessionDay, shiftDays, todayYmd, weekday } from "../../lib/dates";
 
 interface SessionTabProps {
   members: Member[];
@@ -10,50 +11,23 @@ interface SessionTabProps {
   setSessions: (sessions: Session[]) => void;
 }
 
-const FREQUENT_GUESTS = [
-  "Balázs",
-  "Rita",
-  "Marci",
-  "Klaudia",
-  "Timi lánya",
-  "Barbara",
-  "Dorka",
-  "Szabó Dorcsi",
-];
-
-// Get next Mon/Wed/Sat from a date
-function getNextSessionDate(fromDate: Date): Date {
-  const day = fromDate.getDay();
-  const daysUntilNext = [1, 3, 6] // Mon, Wed, Sat
-    .map(targetDay => {
-      let diff = targetDay - day;
-      if (diff <= 0) diff += 7;
-      return diff;
-    })
-    .sort((a, b) => a - b)[0];
-
-  const next = new Date(fromDate);
-  next.setDate(next.getDate() + daysUntilNext);
-  return next;
-}
-
-function getPrevSessionDate(fromDate: Date): Date {
-  const day = fromDate.getDay();
-  const daysSincePrev = [1, 3, 6] // Mon, Wed, Sat
-    .map(targetDay => {
-      let diff = day - targetDay;
-      if (diff <= 0) diff += 7;
-      return diff;
-    })
-    .sort((a, b) => a - b)[0];
-
-  const prev = new Date(fromDate);
-  prev.setDate(prev.getDate() - daysSincePrev);
-  return prev;
+// Gyakori vendégek: az elmúlt 90 napban legalább kétszer eljött vendégek, a leggyakoribbak elöl.
+function frequentGuests(sessions: Session[], today: string): string[] {
+  const from = shiftDays(today, -90);
+  const counts = new Map<string, number>();
+  for (const s of sessions) {
+    if (s.date < from || s.date > today) continue;
+    for (const n of new Set(s.dropIns)) counts.set(n, (counts.get(n) ?? 0) + 1);
+  }
+  return [...counts.entries()]
+    .filter(([, c]) => c >= 2)
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "hu"))
+    .slice(0, 12)
+    .map(([n]) => n);
 }
 
 function formatSessionDate(dateStr: string): string {
-  const date = new Date(dateStr);
+  const date = fromYmd(dateStr);
   const days = ["V", "H", "K", "Sze", "Cs", "P", "Szo"];
   const months = ["jan.", "feb.", "már.", "ápr.", "máj.", "jún.", "júl.", "aug.", "szep.", "okt.", "nov.", "dec."];
   return `${date.getFullYear()}. ${months[date.getMonth()]} ${date.getDate()}. (${days[date.getDay()]})`;
@@ -69,21 +43,12 @@ function getInitials(name: string): string {
 }
 
 export default function SessionTab({ members, setMembers, sessions, setSessions }: SessionTabProps) {
-  // Find today or next session date
-  const today = new Date();
-  const todayStr = today.toISOString().split("T")[0];
-  const todayDay = today.getDay();
-
-  const initialSessionDate = useMemo(() => {
-    // If today is Mon/Wed/Sat, use today
-    if ([1, 3, 6].includes(todayDay)) {
-      return todayStr;
-    }
-    // Otherwise get next session date
-    return getNextSessionDate(today).toISOString().split("T")[0];
-  }, []);
-
-  const [currentSessionDate, setCurrentSessionDate] = useState(initialSessionDate);
+  // Ha ma edzésnap van, a mai edzés nyílik meg, különben a következő.
+  const todayStr = todayYmd();
+  const [currentSessionDate, setCurrentSessionDate] = useState(() =>
+    SESSION_DAYS.includes(weekday(todayStr)) ? todayStr : nextSessionDay(todayStr),
+  );
+  const guestChips = useMemo(() => frequentGuests(sessions, todayStr), [sessions, todayStr]);
   const [dropInInput, setDropInInput] = useState("");
   const [totalInputValue, setTotalInputValue] = useState<string | null>(null);
 
@@ -135,15 +100,8 @@ export default function SessionTab({ members, setMembers, sessions, setSessions 
     updateCurrentSession({ cancelled });
   };
 
-  const handlePrevSession = () => {
-    const prev = getPrevSessionDate(new Date(currentSessionDate));
-    setCurrentSessionDate(prev.toISOString().split("T")[0]);
-  };
-
-  const handleNextSession = () => {
-    const next = getNextSessionDate(new Date(currentSessionDate));
-    setCurrentSessionDate(next.toISOString().split("T")[0]);
-  };
+  const handlePrevSession = () => setCurrentSessionDate(d => prevSessionDay(d));
+  const handleNextSession = () => setCurrentSessionDate(d => nextSessionDay(d));
 
   const handleToggleAttendance = (memberId: string) => {
     const member = members.find(m => m.id === memberId);
@@ -367,7 +325,7 @@ export default function SessionTab({ members, setMembers, sessions, setSessions 
 
         {/* Frequent Guest Chips */}
         <div className="flex flex-wrap gap-2 mb-3">
-          {FREQUENT_GUESTS.map(name => {
+          {guestChips.map(name => {
             const isActive = currentSession.dropIns.includes(name);
             return (
               <button

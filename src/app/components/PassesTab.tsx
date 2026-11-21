@@ -4,6 +4,7 @@ import emailjs from "@emailjs/browser";
 import * as Progress from "@radix-ui/react-progress";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Member, Session } from "../App";
+import { fromYmd } from "../../lib/dates";
 
 const RECIPIENT_EMAIL = "szekely.zoltan92@gmail.com";
 
@@ -14,7 +15,7 @@ interface PassesTabProps {
 }
 
 function formatEmailDate(dateStr: string): string {
-  const date = new Date(dateStr);
+  const date = fromYmd(dateStr);
   const days = ["vasárnap", "hétfő", "kedd", "szerda", "csütörtök", "péntek", "szombat"];
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -32,7 +33,7 @@ export default function PassesTab({ members, setMembers, sessions }: PassesTabPr
     return sessions
       .filter(session => session.attendance.find(a => a.memberId === memberId && a.checked))
       .map(session => session.date)
-      .sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
+      .sort()
       .slice(-count)
       .reverse();
   };
@@ -75,7 +76,7 @@ export default function PassesTab({ members, setMembers, sessions }: PassesTabPr
         const attendance = session.attendance.find(a => a.memberId === memberId);
         return attendance?.checked;
       })
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      .sort((a, b) => a.date.localeCompare(b.date))
       .map(session => formatEmailDate(session.date));
 
     let sessionsList = "Még nincs rögzített edzés.";
@@ -118,6 +119,7 @@ export default function PassesTab({ members, setMembers, sessions }: PassesTabPr
     const newMember: Member = {
       id: Date.now().toString(),
       name: newMemberName.trim(),
+      email: "",
       passesRemaining: 10,
       totalPasses: 10,
       renewals: 0,

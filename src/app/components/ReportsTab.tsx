@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Member, Session } from "../App";
+import { fromYmd } from "../../lib/dates";
 
 interface ReportsTabProps {
   members: Member[];
@@ -8,7 +9,7 @@ interface ReportsTabProps {
 }
 
 function formatSessionDate(dateStr: string): string {
-  const date = new Date(dateStr);
+  const date = fromYmd(dateStr);
   const days = ["V", "H", "K", "Sze", "Cs", "P", "Szo"];
   const months = ["jan.", "feb.", "már.", "ápr.", "máj.", "jún.", "júl.", "aug.", "szep.", "okt.", "nov.", "dec."];
   return `${months[date.getMonth()]} ${date.getDate()}. (${days[date.getDay()]})`;
@@ -36,10 +37,10 @@ export default function ReportsTab({ members, sessions }: ReportsTabProps) {
 
     return sessions
       .filter(s => {
-        const sessionDate = new Date(s.date);
+        const sessionDate = fromYmd(s.date);
         return sessionDate.getMonth() === month && sessionDate.getFullYear() === year && !s.cancelled;
       })
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      .sort((a, b) => b.date.localeCompare(a.date));
   }, [sessions, viewDate]);
 
   const stats = useMemo(() => {
