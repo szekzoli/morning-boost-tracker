@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Calendar, Users, BarChart3 } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Calendar, Users, BarChart3, CloudOff } from "lucide-react";
 import * as Tabs from "@radix-ui/react-tabs";
 import SessionTab from "./components/SessionTab";
 import PassesTab from "./components/PassesTab";
@@ -141,19 +141,65 @@ export default function App() {
     setSessions([]);
   };
 
+  // Mentés: minden változás után a teljes (kis méretű) listát elküldjük. Ha nem sikerül (pl. nincs térerő
+  // a teremben), ezt jól láthatóan jelezzük, és a kapcsolat visszatérésekor automatikusan újra megpróbáljuk.
+  const latest = useRef<{ members: Member[]; sessions: Session[] }>({ members: [], sessions: [] });
+  latest.current = { members, sessions };
+  const [saveFailed, setSaveFailed] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const saveMembers = useCallback(async (list: Member[]) => {
+    const { error } = await supabase.from("members").upsert(list.map(memberToRow), { onConflict: "id" });
+    if (error) {
+      console.error("Members mentési hiba:", error);
+      setSaveFailed(true);
+    }
+    return !error;
+  }, []);
+
+  const saveSessions = useCallback(async (list: Session[]) => {
+    const { error } = await supabase.from("sessions").upsert(list.map(sessionToRow), { onConflict: "date" });
+    if (error) {
+      console.error("Sessions mentési hiba:", error);
+      setSaveFailed(true);
+    }
+    return !error;
+  }, []);
+
+  const retrySave = useCallback(async () => {
+    setSaving(true);
+    const okM = await saveMembers(latest.current.members);
+    const okS = await saveSessions(latest.current.sessions);
+    setSaving(false);
+    if (okM && okS) setSaveFailed(false);
+  }, [saveMembers, saveSessions]);
+
+  useEffect(() => {
+    if (!saveFailed) return;
+    const onOnline = () => void retrySave();
+    window.addEventListener("online", onOnline);
+    return () => window.removeEventListener("online", onOnline);
+  }, [saveFailed, retrySave]);
+
   const updateMembers = (newMembers: Member[]) => {
     const sorted = sortMembers(newMembers);
     setMembers(sorted);
-    supabase.from("members")
-      .upsert(sorted.map(memberToRow), { onConflict: "id" })
-      .then(({ error }) => { if (error) console.error("Members mentési hiba:", error); });
+    void saveMembers(sorted);
   };
 
   const updateSessions = (newSessions: Session[]) => {
     setSessions(newSessions);
-    supabase.from("sessions")
-      .upsert(newSessions.map(sessionToRow), { onConflict: "date" })
-      .then(({ error }) => { if (error) console.error("Sessions mentési hiba:", error); });
+    void saveSessions(newSessions);
+  };
+
+  const deleteMember = async (id: string) => {
+    const { error } = await supabase.from("members").delete().eq("id", id);
+    if (error) {
+      console.error("Törlési hiba:", error);
+      alert("Nem sikerült törölni. Ellenőrizd az internetkapcsolatot.");
+      return;
+    }
+    setMembers(list => list.filter(m => m.id !== id));
   };
 
   if (auth === null) return <Login />;
@@ -184,7 +230,16 @@ export default function App() {
 
   return (
     <div className="size-full bg-background overflow-hidden flex flex-col">
-      <Tabs.Root value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
+      {saveFailed && (
+        <div role="alert" className="flex items-center gap-3 bg-[#fef3c7] text-[#92400e] px-4 py-2 text-sm">
+          <CloudOff className="w-4 h-4 shrink-0" />
+          <span className="flex-1">Az utolsó módosítás nincs elmentve (nincs internet?).</span>
+          <button onClick={() => void retrySave()} disabled={saving} className="font-medium underline disabled:opacity-60">
+            {saving ? "Mentés…" : "Újra"}
+          </button>
+        </div>
+      )}
+      <Tabs.Root value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
         {/* Tab Content */}
         <div className="flex-1 overflow-auto">
           <Tabs.Content value="session" className="h-full">
@@ -196,7 +251,7 @@ export default function App() {
             />
           </Tabs.Content>
           <Tabs.Content value="passes" className="h-full">
-            <PassesTab members={members} setMembers={updateMembers} sessions={sessions} />
+            <PassesTab members={members} setMembers={updateMembers} sessions={sessions} onDeleteMember={deleteMember} />
           </Tabs.Content>
           <Tabs.Content value="reports" className="h-full">
             <ReportsTab members={members} sessions={sessions} onLogout={logout} />

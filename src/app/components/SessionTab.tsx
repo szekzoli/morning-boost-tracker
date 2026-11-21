@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { ChevronLeft, ChevronRight, Check, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, Plus, X } from "lucide-react";
 import { Member, Session, SessionAttendance } from "../App";
 import { Switch } from "./ui/switch";
 import { SESSION_DAYS, fromYmd, nextSessionDay, prevSessionDay, shiftDays, todayYmd, weekday } from "../../lib/dates";
@@ -194,6 +194,7 @@ export default function SessionTab({ members, setMembers, sessions, setSessions 
         <div className="flex items-center justify-between mb-6">
           <button
             onClick={handlePrevSession}
+            aria-label="Előző edzés"
             className="p-2 hover:bg-accent rounded-lg transition-colors"
           >
             <ChevronLeft className="w-6 h-6" />
@@ -203,6 +204,7 @@ export default function SessionTab({ members, setMembers, sessions, setSessions 
           </h2>
           <button
             onClick={handleNextSession}
+            aria-label="Következő edzés"
             className="p-2 hover:bg-accent rounded-lg transition-colors"
           >
             <ChevronRight className="w-6 h-6" />
@@ -229,7 +231,19 @@ export default function SessionTab({ members, setMembers, sessions, setSessions 
               onKeyDown={e => e.key === "Enter" && e.currentTarget.blur()}
               className="w-full text-2xl text-[#14b8a6] text-center bg-transparent focus:outline-none"
             />
-            <div className="text-xs text-muted-foreground mt-1">Összesen</div>
+            <div className="text-xs text-muted-foreground mt-1">
+              {currentSession.totalOverride !== undefined && currentSession.totalOverride !== null ? (
+                <button
+                  onClick={() => updateCurrentSession({ totalOverride: undefined })}
+                  className="underline"
+                  title="Kézzel megadott létszám. Koppints a visszaállításhoz (bérletesek + vendégek)."
+                >
+                  Összesen (kézi) ×
+                </button>
+              ) : (
+                "Összesen"
+              )}
+            </div>
           </div>
           <div className="flex-1 min-w-[100px] bg-card border border-border rounded-lg px-4 py-3 text-center">
             <div className="text-2xl text-[#14b8a6]">{stats.passHolders}</div>
@@ -283,6 +297,8 @@ export default function SessionTab({ members, setMembers, sessions, setSessions 
                 {/* Check Button */}
                 <button
                   onClick={() => handleToggleAttendance(member.id)}
+                  aria-pressed={isChecked}
+                  aria-label={`${member.name} jelen volt`}
                   className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 ${
                     isChecked
                       ? "bg-[#14b8a6] border-[#14b8a6] text-white"
@@ -313,6 +329,13 @@ export default function SessionTab({ members, setMembers, sessions, setSessions 
                     <div className="font-medium truncate">{name}</div>
                     <div className="text-sm text-muted-foreground">Vendég</div>
                   </div>
+                  <button
+                    onClick={() => updateCurrentSession({ dropIns: currentSession.dropIns.filter((_, i) => i !== idx) })}
+                    aria-label={`${name} törlése a vendégek közül`}
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-muted-foreground hover:bg-accent transition-colors flex-shrink-0"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
                 </div>
               ))}
             </div>

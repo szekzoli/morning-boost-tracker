@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, X, Mail, Loader2, History } from "lucide-react";
+import { Plus, X, Mail, Loader2, History, Pencil } from "lucide-react";
 import emailjs from "@emailjs/browser";
 import * as Progress from "@radix-ui/react-progress";
 import * as Dialog from "@radix-ui/react-dialog";
@@ -12,7 +12,13 @@ interface PassesTabProps {
   members: Member[];
   setMembers: (members: Member[]) => void;
   sessions: Session[];
+  onDeleteMember: (id: string) => Promise<void>;
 }
+
+const inputCls =
+  "w-full px-4 py-3 bg-input-background rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-[#14b8a6]/50";
+const dialogCls =
+  "fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-card border border-border rounded-lg p-6 w-[90vw] max-w-md z-50 shadow-lg";
 
 function formatEmailDate(dateStr: string): string {
   const date = fromYmd(dateStr);
@@ -23,7 +29,28 @@ function formatEmailDate(dateStr: string): string {
   return `${year}.${month}.${day}. ${days[date.getDay()]}`;
 }
 
-export default function PassesTab({ members, setMembers, sessions }: PassesTabProps) {
+export default function PassesTab({ members, setMembers, sessions, onDeleteMember }: PassesTabProps) {
+  const [renewId, setRenewId] = useState<string | null>(null);
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const renewMember = members.find(m => m.id === renewId) || null;
+  const editMember = members.find(m => m.id === editId) || null;
+
+  const openEdit = (m: Member) => {
+    setEditId(m.id);
+    setEditName(m.name);
+    setEditEmail(m.email);
+    setConfirmDelete(false);
+  };
+
+  const saveEdit = () => {
+    if (!editMember || !editName.trim()) return;
+    setMembers(members.map(m => (m.id === editMember.id ? { ...m, name: editName.trim(), email: editEmail.trim() } : m)));
+    setEditId(null);
+  };
+
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newMemberName, setNewMemberName] = useState("");
   const [sendingEmail, setSendingEmail] = useState<string | null>(null);
@@ -152,7 +179,14 @@ export default function PassesTab({ members, setMembers, sessions }: PassesTabPr
                 {/* Header */}
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium truncate">{member.name}</div>
+                    <button
+                      onClick={() => openEdit(member)}
+                      className="flex max-w-full items-center gap-1.5 text-left font-medium"
+                      aria-label={`${member.name} adatainak szerkesztése`}
+                    >
+                      <span className="truncate">{member.name}</span>
+                      <Pencil className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
+                    </button>
                     <div
                       className={`text-sm mt-1 ${
                         isEmpty
@@ -175,6 +209,8 @@ export default function PassesTab({ members, setMembers, sessions }: PassesTabPr
                     <button
                       onClick={() => handleSendEmail(member.id)}
                       disabled={sendingEmail === member.id}
+                      aria-label="Bérletösszesítő küldése e-mailben"
+                      title="Bérletösszesítő küldése e-mailben"
                       className="px-3 py-1.5 border border-border rounded-lg hover:bg-accent transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {sendingEmail === member.id
@@ -184,12 +220,14 @@ export default function PassesTab({ members, setMembers, sessions }: PassesTabPr
                     </button>
                     <button
                       onClick={() => setHistoryMemberId(member.id)}
+                      aria-label="Alkalmak a jelenlegi bérletben"
+                      title="Alkalmak a jelenlegi bérletben"
                       className="px-3 py-1.5 border border-border rounded-lg hover:bg-accent transition-colors text-sm"
                     >
                       <History className="w-4 h-4" />
                     </button>
                     <button
-                      onClick={() => handleRenew(member.id)}
+                      onClick={() => setRenewId(member.id)}
                       className="px-3 py-1.5 bg-[#14b8a6] text-white rounded-lg hover:bg-[#0d9488] transition-colors text-sm whitespace-nowrap"
                     >
                       Megújít
@@ -234,6 +272,101 @@ export default function PassesTab({ members, setMembers, sessions }: PassesTabPr
           <Plus className="w-5 h-5" />
           Új tag hozzáadása
         </button>
+
+        {/* Megújítás megerősítése */}
+        <Dialog.Root open={!!renewMember} onOpenChange={open => !open && setRenewId(null)}>
+          <Dialog.Portal>
+            <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
+            <Dialog.Content className={dialogCls}>
+              <Dialog.Title className="text-lg font-medium">Bérlet megújítása</Dialog.Title>
+              <Dialog.Description className="text-sm text-muted-foreground mt-2 mb-5">
+                {renewMember && (
+                  <>
+                    <strong className="text-foreground">{renewMember.name}</strong> új, 10 alkalmas bérletet kap
+                    {renewMember.debt > 0
+                      ? `. A ${renewMember.debt} fizetetlen alkalmat levonom belőle, így ${Math.max(0, 10 - renewMember.debt)} alkalom marad.`
+                      : "."}
+                  </>
+                )}
+              </Dialog.Description>
+              <div className="flex gap-2 justify-end">
+                <button onClick={() => setRenewId(null)} className="px-4 py-2 border border-border rounded-lg hover:bg-accent transition-colors">
+                  Mégse
+                </button>
+                <button
+                  onClick={() => {
+                    if (renewMember) handleRenew(renewMember.id);
+                    setRenewId(null);
+                  }}
+                  className="px-4 py-2 bg-[#14b8a6] text-white rounded-lg hover:bg-[#0d9488] transition-colors"
+                >
+                  Megújítom
+                </button>
+              </div>
+            </Dialog.Content>
+          </Dialog.Portal>
+        </Dialog.Root>
+
+        {/* Tag szerkesztése / törlése */}
+        <Dialog.Root open={!!editMember} onOpenChange={open => !open && setEditId(null)}>
+          <Dialog.Portal>
+            <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
+            <Dialog.Content className={dialogCls}>
+              <div className="flex items-start justify-between mb-4">
+                <Dialog.Title className="text-lg font-medium">Tag adatai</Dialog.Title>
+                <Dialog.Close className="p-1 hover:bg-accent rounded" aria-label="Bezárás">
+                  <X className="w-5 h-5" />
+                </Dialog.Close>
+              </div>
+              <Dialog.Description className="sr-only">A tag nevének és e-mail-címének módosítása.</Dialog.Description>
+              <label className="block text-sm mb-1">Név</label>
+              <input value={editName} onChange={e => setEditName(e.target.value)} className={`${inputCls} mb-3`} />
+              <label className="block text-sm mb-1">E-mail (a bérletösszesítőhöz)</label>
+              <input
+                type="email"
+                value={editEmail}
+                onChange={e => setEditEmail(e.target.value)}
+                placeholder="nem kötelező"
+                className={`${inputCls} mb-5`}
+              />
+              {confirmDelete ? (
+                <div className="rounded-lg border border-[#f87171] p-3 text-sm">
+                  <p>Biztosan törlöd? A korábbi jelenlétei a statisztikában megmaradnak, de a tag eltűnik a listákból.</p>
+                  <div className="mt-3 flex gap-2 justify-end">
+                    <button onClick={() => setConfirmDelete(false)} className="px-3 py-1.5 border border-border rounded-lg">
+                      Mégse
+                    </button>
+                    <button
+                      onClick={async () => {
+                        if (editMember) await onDeleteMember(editMember.id);
+                        setEditId(null);
+                      }}
+                      className="px-3 py-1.5 bg-[#ef4444] text-white rounded-lg"
+                    >
+                      Törlés
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setConfirmDelete(true)} className="mr-auto text-sm text-[#ef4444] hover:underline">
+                    Tag törlése
+                  </button>
+                  <button onClick={() => setEditId(null)} className="px-4 py-2 border border-border rounded-lg hover:bg-accent transition-colors">
+                    Mégse
+                  </button>
+                  <button
+                    onClick={saveEdit}
+                    disabled={!editName.trim()}
+                    className="px-4 py-2 bg-[#14b8a6] text-white rounded-lg hover:bg-[#0d9488] transition-colors disabled:opacity-50"
+                  >
+                    Mentés
+                  </button>
+                </div>
+              )}
+            </Dialog.Content>
+          </Dialog.Portal>
+        </Dialog.Root>
 
         {/* Add Member Modal */}
         <Dialog.Root open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
